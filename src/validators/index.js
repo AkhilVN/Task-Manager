@@ -38,7 +38,7 @@ class Validator {
             return true;
         }
         return false;
-    }
+    } 
     static validateTaskId(taskId, taskManagementData) {
         let taskFound = taskManagementData.find(el => el.id === taskId);
         if (taskFound && Object.keys(taskFound).length) return {

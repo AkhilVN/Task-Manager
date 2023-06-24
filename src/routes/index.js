@@ -11,6 +11,62 @@ taskRoutes.use(bodyParser.json());
 
 // Get the list of all tasks
 taskRoutes.get('/', (req, res) => {
+    const sort = req.query.sort;
+    const isCompleted = req.query.isCompleted;
+    let sortedTasks = [];
+    let isCompletedTasks = [];
+
+    //sort by createdAt, filter by isCompleted
+    if (isCompleted) {
+        if (isCompleted !== "true" && isCompleted !== "false") {
+            res.status(400);
+            res.send({
+                status: 400,
+                message: "Invalid isCompleted value, use true or false"
+            });
+        } else {
+            isCompletedTasks = taskManagementData.filter((task) => {
+                return task.isCompleted.toString() === isCompleted;
+            });
+            res.status(200),
+                res.send({
+                    status: 200,
+                    message: "Tasks fetched successfully for isCompleted value " + isCompleted + ".",
+                    data: isCompletedTasks
+                });
+        }
+    }
+    if (isCompleted && sort) {
+        let result = isCompletedTasks.sort((a, b) => {
+            return sort === "DESC" ? new Date(b.createdAt) - new Date(a.createdAt) : new Date(a.createdAt) - new Date(b.createdAt);
+        });
+        let data = {
+            status: 200,
+            message: "Tasks fetched successfully for isCompleted value " + isCompleted + " and sort value " + sort + ".",
+            data: result
+        }
+        res.status(200);
+        res.send(data);
+    }
+    if (sort) {
+        if (sort !== "ASC" && sort !== "DESC") {
+            res.status(400);
+            res.send({
+                status: 400,
+                message: "Invalid sort value, use ASC or DESC"
+            });
+        } else {
+            sortedTasks = taskManagementData.sort((a, b) => {
+                return sort === "DESC" ? new Date(b.createdAt) - new Date(a.createdAt) : new Date(a.createdAt) - new Date(b.createdAt);
+            });
+            res.status(200);
+            res.send({
+                status: 200,
+                message: "Tasks fetched successfully for sort value " + sort,
+                data: sortedTasks
+            });
+        }
+    }
     let data = {
         status: 200,
         message: "Tasks fetched successfully",
@@ -106,5 +162,26 @@ taskRoutes.delete('/:taskId', (req, res) => {
     }
 });
 
+// fetch task by priority
+taskRoutes.get('/priority/:priority', (req, res) => {
+    let priority = req.params.priority;
+    let result = Validator.validatePriority({ priority }, taskManagementData);
+    if (result) {
+        const filteredData = taskManagementData.filter((task) => task.priority === priority.toUpperCase())
+        res.status(200);
+        res.send({
+            status: 200,
+            message: `Tasks fetched for ${priority} priority`,
+            data: filteredData
+        });
+    } else {
+        res.status(400);
+        res.send({
+            status: 400,
+            message: `Invalid priority value. Use HIGH, MEDIUM or LOW`,
+            data: {}
+        });
+    }
+});
 
 module.exports = taskRoutes;
